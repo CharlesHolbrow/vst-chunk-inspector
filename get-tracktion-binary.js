@@ -28,6 +28,7 @@ const handleBase64String = (b64) => {
   const buffer = Buffer.from(b64, 'base64');
   const file = fs.createWriteStream('tCompState-fromTracktion');
   file.write(buffer);
+  // To get just the VST part, use file.write(buffer.slice(160));
 }
 
 const client = new fluid.Client();
