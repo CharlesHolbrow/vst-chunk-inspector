@@ -20,6 +20,8 @@ I don't totally understand how these strings are delimited.
 It looks like if a strings ends Before some static character limit, that means a new 
 argument is beginning.
 
+My [post on the forums](https://forum.cockos.com/showthread.php?t=240523) got an answer with more details about VST storage.
+
 # Tracktion Engine and Tracktion Waveform
 
 My [initial experiments](https://github.com/CharlesHolbrow/vst-chunk-inspector) show that 
