@@ -40,9 +40,12 @@ const reaCompState02 = {
 }
 
 
-const buffer = Buffer.from(tCompState00.b2, 'base64');
-const writeStream = fs.createWriteStream('tCompState-fromReaper');
-writeStream.write(buffer);
+const buffer1 = Buffer.from(tCompState00.b1, 'base64');
+const buffer2 = Buffer.from(tCompState00.b2, 'base64');
+const writeStream1 = fs.createWriteStream('tCompState-fromReaper-1');
+const writeStream2 = fs.createWriteStream('tCompState-fromReaper-2');
+writeStream1.write(buffer1);
+writeStream2.write(buffer2);
 
 `
 4 bytes <VSTID>

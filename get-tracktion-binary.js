@@ -17,8 +17,9 @@ const handleResult = (result) => {
         console.error('Server Error:', message.args[1].value);
       } else {
         const object = JSON.parse(message.args[2].value);
-        console.log(object);
-        handleBase64String(object.stateBase64);
+        console.dir(object, {depth: null});
+        if (object.vst2State) handleBase64String(object.vst2State);
+        else throw new Error('get-tracktion-binary: missing state');
       }
     }
   }
@@ -28,7 +29,6 @@ const handleBase64String = (b64) => {
   const buffer = Buffer.from(b64, 'base64');
   const file = fs.createWriteStream('tCompState-fromTracktion');
   file.write(buffer);
-  // To get just the VST part, use file.write(buffer.slice(160));
 }
 
 const client = new fluid.Client();
