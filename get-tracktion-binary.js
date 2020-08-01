@@ -1,10 +1,12 @@
 const fs = require('fs');
 const fluid = require('fluid-music');
 
+const vst3 = false;
+
 const msg = [
   fluid.global.activate('session.tracktionedit', true),
   fluid.audiotrack.select('test'),
-  fluid.pluginTCompressor.select(),
+  vst3 ? fluid.plugin.select('#TStereo Delay', 'vst3') : fluid.pluginTCompressor.select(),
   fluid.plugin.getReport(),
 ]
 
@@ -18,7 +20,8 @@ const handleResult = (result) => {
       } else {
         const object = JSON.parse(message.args[2].value);
         console.dir(object, {depth: null});
-        if (object.vst2State) handleBase64String(object.vst2State);
+        if (object.vst3State) handleBase64String(object.vst3State);
+        else if (object.vst2State) handleBase64String(object.vst2State);
         else throw new Error('get-tracktion-binary: missing state');
       }
     }
@@ -27,7 +30,8 @@ const handleResult = (result) => {
 
 const handleBase64String = (b64) => {
   const buffer = Buffer.from(b64, 'base64');
-  const file = fs.createWriteStream('tCompState-fromTracktion');
+  const filename = vst3 ? 'tStereoDelayVst3-fromTracktion' : 'tCompState-fromTracktion';
+  const file = fs.createWriteStream(filename);
   file.write(buffer);
 }
 
