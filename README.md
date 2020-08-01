@@ -2,6 +2,15 @@
 
 Hacks for studying how to read and write the state of VSTs to and from DAW sessions.
 
+# Current Results
+
+**To get Reaper Chunks:** Manually copy a string from a `.RPP` file in `parse-reaper-strings.js`
+
+**To get Tracktion VST chunks** use the `fluid.plugin.report` method as outlines in `get-tracktion-strings.js`
+
+**Current VST2 results:**  Reports generated from tracktion have a `.vst2State` field, the contents of which look exactly like the contents of the *second* base64 chunk in a `.RPP` VST item (31 July 2020)
+
+**Current VST3 results:** Reports generated from tracktion have a `.vst3State` field. Its contents look similar to the *second* base64 chunk in a `.RPP` VST item. However, the Reaper version has additional 8 bytes of data at the beginning, and another additional 8 bytes of data at the end of the chunk. These additional bytes are not present in the results aquired in a tracktion report (31 July, 2020). More research is needed to identify the meaning of these extra bytes.
 
 # Reaper
 
@@ -32,3 +41,4 @@ of the Base64 saved in a RPP chunk.
 
 Note that the XML files that Waveform uses to store XML use a weird JUCE-speciffic 
 Base64 encoding. I used the Fluid Engine to extract conventional Base64. 
+
