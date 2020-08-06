@@ -12,9 +12,59 @@ Hacks for studying how to read and write the state of VSTs to and from DAW sessi
 
 **Current VST3 results:** Reports generated from tracktion have a `.vst3State` field. Its contents look similar to the *second* base64 chunk in a `.RPP` VST item. However, the Reaper version has additional 8 bytes of data at the beginning, and another additional 8 bytes of data at the end of the chunk. These additional bytes are not present in the results aquired in a tracktion report (31 July, 2020). More research is needed to identify the meaning of these extra bytes.
 
-# Reaper
+# Reaper .RPP Plugin State
 
-For each VST2 or VST3 instance, Reaper stores three Base64 encoded blocks. Its unclear exactly how these three blocks are delimited.
+For each VST2 or VST3 instance, Reaper stores three Base64 encoded blocks. Its unclear exactly how these three blocks are delimited. The exact formats are slightly different for VST2 and VST3.
+
+## VST2
+
+### First line:
+```
+<VST "VSTi: Podolski (u-he)" Podolski.vst 0 "" 1349477487<565354506F646F706F646F6C736B6900> ""
+```
+
+- Token: `VST`
+- Name: `"VSTi: Podolski (u-he)"`
+- Filename: `Podolski.vst`
+- Unknown Number: `0`
+- Custom name (if renamed) `""`
+- ID `1349477487<565354506F646F706F646F6C736B6900>`
+  - int `1349477487` This is the same as JUCE's `PluginDescription::uid`, which is an `int` data type. If we convert that to a little-endian int, the binary representation is equavalent to `Podo` in ASCII.
+  - Hex: `<565354506F646F706F646F6C736B6900>` This spells out `VSTPodopodolski\x00` in hex. It does not need to be correct for the plugin to load. When reaper re-saves a session this value will be reset no matter what it was changed to.
+
+The int id was [mentioned on the Reaper forum](https://forum.cockos.com/showthread.php?t=193665), but it looks like the post is out of date.
+
+### Block 1
+
+I presume this is the same as for VST3
+
+### Block 2
+
+I have been able to get this state from JUCE.
+
+### Block 3
+
+Podolski's output: `AGluaXRpYWxpemUAEAAAAA==`, which translates to the following Hex
+
+```
+00 69 6e 69 74 69 61 6c 69 7a 65 00 10 00 00 00 // hex
+00                               00 10 00 00 00
+   69 6e 69 74 69 61 6c 69 7a 65
+   i  n  i  t  i  a  l  i  z  e                 // ascii
+```
+
+A subset of the bytes spell out the preset name.
+
+Here's another example from ReaComp VST2
+
+```javascript
+Buffer.from('AHN0b2NrIC0gc3RlYWR5IHJvY2sga2ljawAAAAAA', 'base64').toString('ascii')
+// Result: '\x00stock - steady rock kick\x00\x00\x00\x00\x00'
+```
+
+I do not know what the other `0x00` and `0x01` bytes are... They do not seem to contain the program number as I suspected.
+
+## VST3
 
 ### First Line
 
@@ -79,7 +129,7 @@ The first four four bytes show the length of the IComponent state. I believe tha
 
 ### Block 3
 
-No one know what this is for.
+This specifies the Program Name. See VST2 notes for more details. 
 
 # Tracktion Engine and Tracktion Waveform
 
@@ -154,50 +204,3 @@ TSize 	offset
 TSize 	size
 ```
 
-# VST2
-
-### First line:
-```
-<VST "VSTi: Podolski (u-he)" Podolski.vst 0 "" 1349477487<565354506F646F706F646F6C736B6900> ""
-```
-
-- Token: `VST`
-- Name: `"VSTi: Podolski (u-he)"`
-- Filename: `Podolski.vst`
-- Unknown Number: `0`
-- Custom name (if renamed) `""`
-- ID `1349477487<565354506F646F706F646F6C736B6900>`
-  - int `1349477487` This is the same as JUCE's `PluginDescription::uid`, which is an `int` data type. If we convert that to a little-endian int, the binary representation is equavalent to `Podo` in ASCII.
-  - Hex: `<565354506F646F706F646F6C736B6900>` This spells out `VSTPodopodolski\x00` in hex. It does not need to be correct for the plugin to load. When reaper re-saves a session this value will be reset no matter what it was changed to.
-
-The int id was [mentioned on the Reaper forum]](https://forum.cockos.com/showthread.php?t=193665), but it looks like the post is out of date.
-
-### Block 1
-
-I presume this is the same as for VST3
-
-### Block 2
-
-I have been able to get this state from JUCE.
-
-## Block 3
-
-Podolski's output: `AGluaXRpYWxpemUAEAAAAA==`, which translates to the following Hex
-
-```
-00 69 6e 69 74 69 61 6c 69 7a 65 00 10 00 00 00 // hex
-00                               00 10 00 00 00
-   69 6e 69 74 69 61 6c 69 7a 65
-   i  n  i  t  i  a  l  i  z  e                 // ascii
-```
-
-A subset of the bytes spell out the preset name.
-
-Here's another example from ReaComp VST2
-
-```javascript
-Buffer.from('AHN0b2NrIC0gc3RlYWR5IHJvY2sga2ljawAAAAAA', 'base64').toString('ascii')
-// Result: '\x00stock - steady rock kick\x00\x00\x00\x00\x00'
-```
-
-I do not know what the other `0x00` and `0x01` bytes are... They do not seem to contain the program number as I suspected.
