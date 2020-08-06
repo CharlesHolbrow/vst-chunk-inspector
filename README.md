@@ -16,7 +16,7 @@ Hacks for studying how to read and write the state of VSTs to and from DAW sessi
 
 For each VST2 or VST3 instance, Reaper stores three Base64 encoded blocks. Its unclear exactly how these three blocks are delimited.
 
-### First Line 
+### First Line
 
 VST3 example
 ```
@@ -24,7 +24,7 @@ VST3 example
 ```
 1. Name: `"VST3: #TStereo Delay (Tracktion)"`
 2. `"#TStereo Delay.vst3"`
-3. `0` 
+3. `0`
 4. Custom Name (If pulgin is renamed): `""`
 5. Plugin ID. for VST3: `1997878177` and `{5653545344656C237473746572656F20}`
   - Reaper's ID, which can be found in `reaper-vstplugins64.ini` in `~/Library/Application Support/Reaper` on Mac. Initial tests show that its okay if this is incorrect.
@@ -33,6 +33,8 @@ VST3 example
 Tracktion VST3 EditControllerIDs are VERY similar (one character off) to that second number reported in reaper
 
 U-He VST3 Edit ControllerIDs are appear to not be related to tracktion's values.
+
+Plugin ID info Links: [1](https://forum.cockos.com/showthread.php?t=193665), [2]()
 
 #### TEqualizer
 ```
@@ -68,9 +70,7 @@ The wiki has a [little info](https://wiki.cockos.com/wiki/index.php/State_Chunk_
 
 ### Block 2
 
-The raw VST plugin state. For VST3 plugins, there is a mysterious extra 8 bytes at the beginning and end of the chunk. 
-
-In a preliminary test, The last 8 bytes were all `0x00`. However, the second byte of the first 8 bytes is critical for loading the plugin correctly.
+The raw VST plugin state. For VST3 plugins, there is an extra 8 bytes at the beginning of the chunk
 
 ```
 // REAPER adds 8 bytes  | on the 9th byte, the VST state as reported by the plugin begins. I verified by comparing with with my own plugin host.
@@ -81,24 +81,32 @@ CD 11 00 00 01 00 00 00 C9 11 00 00 23 70 67 6D ... // U-He zebralette VST3
 F3 67 00 00 01 00 00 00 EF 67 00 00 23 70 67 6D ... // U-He Zebra2 VST3
 ```
 
+Schwa [Answered](https://forum.cockos.com/showpost.php?p=2327240&postcount=3) my questions about what these bytes are for.
+
+According to the [VST3 Persistence FAQ](https://steinbergmedia.github.io/vst3_doc/vstsdk/faq.html#faqPersistence) VST3 State is stored in two chunks.
+1. the `Vst::IComponenet` state `component->getState (compState)`
+2. the `Vst::IEditController` state `controller->getState (ctrlState)`
+
+The first four four bytes show the length of the IComponent state. I believe that in `SingleComponentEffect`, the state will be the same for both, because they are in effect, the same object.
+
 ### Block 3
 
 No one know what this is for.
 
 # Tracktion Engine and Tracktion Waveform
 
-My [initial experiments](https://github.com/CharlesHolbrow/vst-chunk-inspector) show that 
+My [initial experiments](https://github.com/CharlesHolbrow/vst-chunk-inspector) show that
 Tracktion puts a 160 byte header before the actual VST data. This is based off only one
 test using an unmodified instantiation of `#TCompressor`.  Otherwise the binary data
 matches the [second line](https://github.com/CharlesHolbrow/vst-chunk-inspector/blob/master/simple.RPP#L159-L170)
 of the Base64 saved in a RPP chunk.
 
-Note that the XML files that Waveform uses to store XML use a weird JUCE-speciffic 
-Base64 encoding. I used the Fluid Engine to extract conventional Base64. 
+Note that the XML files that Waveform uses to store XML use a weird JUCE-speciffic
+Base64 encoding. I used the Fluid Engine to extract conventional Base64.
 
 # Notes about Plugin IDs in VST3
 
-According to [How to add/create your own VST 3 plug-ins](https://steinbergmedia.github.io/vst3_doc/vstinterfaces/addownplugs.html) you typically have two different IDs that define different parts of your plugin. A **Processor ID** and a **Controller ID**. 
+According to [How to add/create your own VST 3 plug-ins](https://steinbergmedia.github.io/vst3_doc/vstinterfaces/addownplugs.html) you typically have two different IDs that define different parts of your plugin. A **Processor ID** and a **Controller ID**.
 ```
 static const FUID MyProcessorUID  (0x2A0CC26C, 0xBF88964C, 0xB0BFFCB0, 0x554AF523);
 static const FUID MyControllerUID (0xB9DBBD64, 0xF7C40A4C, 0x9C8BFB33, 0x8761E244);
@@ -118,4 +126,89 @@ DECLARE_CLASS_IID (IComponent, 0xE831FF31, 0xF2D54301, 0x928EBBEE, 0x25697802)
 
 I think that the "I" in "IComponent", "IAudioProcessor", and "IEditController" stands for "Interface". The docs contain [a list of other Interfaces](https://steinbergmedia.github.io/vst3_doc/vstinterfaces/group__vstIPlug.html) that plugins can implement.
 
+# Other Notes about VST3 Persistence
 
+## Hosts: saving and loading state
+
+- [VST API Docs -> Persistence](https://steinbergmedia.github.io/vst3_doc/vstinterfaces/index.html#Persistence)
+- [VST API FAQ -> How Does Persistence Work?](https://steinbergmedia.github.io/vst3_doc/vstsdk/faq.html#faqPersistence)
+
+When saving state, the host follows this order:
+
+1. `iComponentInstance->getState (compState)`
+2. `iEditControllerInstance->getState (ctrlState)`
+
+When loading state, the host follows this order:
+
+1. `iComponentInstance->setState (compState)`
+2. `iEditControllerInstance->setComponentState (compState)`
+3. `iEditControllerInstance->setState (ctrlState)`
+
+Always handle the `Vst::IComponent` first
+
+## Preset Files:
+
+In the [Preset File Documentation](https://steinbergmedia.github.io/vst3_doc/vstsdk/classSteinberg_1_1Vst_1_1PresetFile.html)
+It looks like you can use the `getEntry` method to get any of:
+
+- `Steinberg::Vst::kHeader`
+- `Steinberg::Vst::kComponentState`
+- `Steinberg::Vst::kControllerState`
+- `Steinberg::Vst::kProgramData`
+- `Steinberg::Vst::kMetaInfo`
+- `Steinberg::Vst::kChunkList`
+- `Steinberg::Vst::kNumPresetChunks`
+
+These return an [`Entry`]() struct, which is a way of pointing to a byte range in the preset file.
+```
+ChunkID 	id
+TSize 	offset
+TSize 	size
+```
+
+# VST2
+
+### First line:
+```
+<VST "VSTi: Podolski (u-he)" Podolski.vst 0 "" 1349477487<565354506F646F706F646F6C736B6900> ""
+```
+
+- Token: `VST`
+- Name: `"VSTi: Podolski (u-he)"`
+- Filename: `Podolski.vst`
+- Unknown Number: `0`
+- Custom name (if renamed) `""`
+- ID `1349477487<565354506F646F706F646F6C736B6900>`
+  - int `1349477487` This is the same as JUCE's `PluginDescription::uid`, which is an `int` data type. If we convert that to a little-endian int, the binary representation is equavalent to `Podo` in ASCII.
+  - `<565354506F646F706F646F6C736B6900>` I don't know what this is, but it seems like you can replace it with all zeros, and reaper loads the plugin just fine. When Reaper save the session, it will replace the zeros with the same number as before. I tried looking at it with a hex editor, but it seems pretty random.
+
+
+### Block 1
+
+Same as for VST3
+
+### Block 2
+
+I have been able to get this state from JUCE
+
+## Block 3
+
+Podolski's output: `AGluaXRpYWxpemUAEAAAAA==`, which translates to the following Hex
+
+```
+00 69 6e 69 74 69 61 6c 69 7a 65 00 10 00 00 00
+00                               00 10 00 00 00
+   69 6e 69 74 69 61 6c 69 7a 65
+   i  n  i  t  i  a  l  i  z  e                 // ascii
+```
+
+A subset of the bytes spell out the preset name.
+
+Here's another example from ReaComp VST2
+
+```javascript
+Buffer.from('AHN0b2NrIC0gc3RlYWR5IHJvY2sga2ljawAAAAAA', 'base64').toString('ascii')
+// Result: '\x00stock - steady rock kick\x00\x00\x00\x00\x00'
+```
+
+I do not know what the other `0x00` and `0x01` bytes are... They do not seem to contain the program number as I suspected.
