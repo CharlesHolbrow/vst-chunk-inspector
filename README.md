@@ -30,30 +30,18 @@ VST3 example
   - Reaper's ID, which can be found in `reaper-vstplugins64.ini` in `~/Library/Application Support/Reaper` on Mac. Initial tests show that its okay if this is incorrect.
   - VstPlugin's "ClassID" in hex. This has to be correct for the plugin to load
 
-Tracktion VST3 EditControllerIDs are VERY similar (one character off) to that second number reported in reaper
+I would like to retrieve VST3 ClassIDs and from JUCE. Unfortunately, this is [not currently possible](https://forum.juce.com/t/how-to-get-vst3-class-id-aka-cid-aka-component-id/41041/3).
 
-U-He VST3 Edit ControllerIDs are appear to not be related to tracktion's values.
+Be careful not to confuse the VST3 ClassID with the ID of the VST Components. The Tracktion VST3 plugin EditControllerIDs look VERY similar to the ClassIDs. Other plugins I've tested do not work this way.
 
-Plugin ID info Links: [1](https://forum.cockos.com/showthread.php?t=193665), [2]()
+```
+// TEqualizer:
+Tracktion EditControllerID: 5653 45 455173722374657175616C6973
+ClassID:                    5653 54 455173722374657175616C6973
 
-#### TEqualizer
-```
-Tracktion: 5653 45 455173722374657175616C6973
-Reaper:    5653 54 455173722374657175616C6973
-```
-
-#### Podolski
-```
-Tracktion Processor ID: 565345455173722374657175616c6973
-Reaper:                 D39D5B69D6AF42FA12345678506F646F
-Track Edit ControllerID:DCD7BBE37742448DA874AACC979C759E
-```
-
-#### TStereo Delay
-```
-Trak Processor ID: 42043F99B7DA453CA569E79D9AAEC33D
-Trak Edit Controller ID: 5653 45 5344656C237473746572656F20
-Reaper:                  5653 54 5344656C237473746572656F20
+// TStereo Delay
+Tracktion EditControllerID: 5653 45 5344656C237473746572656F20
+ClassID:                    5653 54 5344656C237473746572656F20
 ```
 
 ### Block 1
@@ -182,21 +170,22 @@ TSize 	size
   - int `1349477487` This is the same as JUCE's `PluginDescription::uid`, which is an `int` data type. If we convert that to a little-endian int, the binary representation is equavalent to `Podo` in ASCII.
   - Hex: `<565354506F646F706F646F6C736B6900>` This spells out `VSTPodopodolski\x00` in hex. It does not need to be correct for the plugin to load. When reaper re-saves a session this value will be reset no matter what it was changed to.
 
+The int id was [mentioned on the Reaper forum]](https://forum.cockos.com/showthread.php?t=193665), but it looks like the post is out of date.
 
 ### Block 1
 
-Same as for VST3
+I presume this is the same as for VST3
 
 ### Block 2
 
-I have been able to get this state from JUCE
+I have been able to get this state from JUCE.
 
 ## Block 3
 
 Podolski's output: `AGluaXRpYWxpemUAEAAAAA==`, which translates to the following Hex
 
 ```
-00 69 6e 69 74 69 61 6c 69 7a 65 00 10 00 00 00
+00 69 6e 69 74 69 61 6c 69 7a 65 00 10 00 00 00 // hex
 00                               00 10 00 00 00
    69 6e 69 74 69 61 6c 69 7a 65
    i  n  i  t  i  a  l  i  z  e                 // ascii
