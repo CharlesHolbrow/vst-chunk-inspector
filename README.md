@@ -28,7 +28,7 @@ VST3 example
 4. Custom Name (If pulgin is renamed): `""`
 5. Plugin ID. for VST3: `1997878177` and `{5653545344656C237473746572656F20}`
   - Reaper's ID, which can be found in `reaper-vstplugins64.ini` in `~/Library/Application Support/Reaper` on Mac. Initial tests show that its okay if this is incorrect.
-  - Strongly suspect: VstPlugin's "ClassID", and Base64 encoded. This has to be correct for the plugin to load
+  - VstPlugin's "ClassID" in hex. This has to be correct for the plugin to load
 
 Tracktion VST3 EditControllerIDs are VERY similar (one character off) to that second number reported in reaper
 
@@ -180,7 +180,7 @@ TSize 	size
 - Custom name (if renamed) `""`
 - ID `1349477487<565354506F646F706F646F6C736B6900>`
   - int `1349477487` This is the same as JUCE's `PluginDescription::uid`, which is an `int` data type. If we convert that to a little-endian int, the binary representation is equavalent to `Podo` in ASCII.
-  - `<565354506F646F706F646F6C736B6900>` I don't know what this is, but it seems like you can replace it with all zeros, and reaper loads the plugin just fine. When Reaper save the session, it will replace the zeros with the same number as before. I tried looking at it with a hex editor, but it seems pretty random.
+  - Hex: `<565354506F646F706F646F6C736B6900>` This spells out `VSTPodopodolski\x00` in hex. It does not need to be correct for the plugin to load. When reaper re-saves a session this value will be reset no matter what it was changed to.
 
 
 ### Block 1
