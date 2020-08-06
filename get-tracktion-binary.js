@@ -29,6 +29,7 @@ const handleResult = (result) => {
         console.log(object);//console.dir(object, {depth: null});
         jsonWriter.write(JSON.stringify(object, null, 2));
         if (object.vst3State) handleBase64String(object.vst3State);
+        else if (object.vst3IComponentState) handleBase64String(object.vst3IComponentState);
         else if (object.vst2State) handleBase64String(object.vst2State);
         else throw new Error('get-tracktion-binary: missing state');
       }
