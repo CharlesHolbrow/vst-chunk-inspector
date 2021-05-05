@@ -121,7 +121,7 @@ F3 67 00 00 01 00 00 00 EF 67 00 00 23 70 67 6D ... // U-He Zebra2 VST3
 
 Schwa [Answered](https://forum.cockos.com/showpost.php?p=2327240&postcount=3) my questions about what these bytes are for.
 
-According to the [VST3 Persistence FAQ](https://steinbergmedia.github.io/vst3_doc/vstsdk/faq.html#faqPersistence) VST3 State is stored in two chunks.
+According to the [VST3 Persistence FAQ](https://developer.steinberg.help/display/VST/Frequently+Asked+Questions#FrequentlyAskedQuestions-Persistence) VST3 State is stored in two chunks.
 1. the `Vst::IComponenet` state `component->getState (compState)`
 2. the `Vst::IEditController` state `controller->getState (ctrlState)`
 
@@ -169,7 +169,7 @@ I think that the "I" in "IComponent", "IAudioProcessor", and "IEditController" s
 ## Hosts: saving and loading state
 
 - [VST API Docs -> Persistence](https://steinbergmedia.github.io/vst3_doc/vstinterfaces/index.html#Persistence)
-- [VST API FAQ -> How Does Persistence Work?](https://steinbergmedia.github.io/vst3_doc/vstsdk/faq.html#faqPersistence)
+- [VST API FAQ -> How Does Persistence Work?](https://developer.steinberg.help/display/VST/Frequently+Asked+Questions#FrequentlyAskedQuestions-Persistence)
 
 When saving state, the host follows this order:
 
