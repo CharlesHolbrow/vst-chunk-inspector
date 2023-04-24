@@ -9,6 +9,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "fluid-music": "^0.1.0"
+    "fluid-music": "^0.10.0"
   }
 }
